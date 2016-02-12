@@ -35,19 +35,57 @@ sudo apt-get install gcc-gfortran openssl-devel pcre-devel \
   libxml2-devel gsl-static
 
 cd "$TLDIR"
+echo ""
+echo "#######################################################"
 echo "Step 1: Clone down the HTTP repository from SourceForge"
+echo "#######################################################"
 git clone http://root.cern.ch/git/root.git root_source
-echo "Step 2: Create and navigate to the build directory for containing the build"
+
+echo ""
+echo "#######################################################"
+echo "Step 2: Create and navigate to the build directory for"
+echo "containing the build"
+echo "#######################################################"
 mkdir root; cd root
+
+echo ""
+echo "#######################################################"
 echo "Step 3: unset the ROOTSYS ENV variable"
+echo "#######################################################"
 unset ROOTSYS
-echo "Step 4: Execute the cmake command the path to the top of your ROOT source tree"
+
+echo ""
+echo "#######################################################"
+echo "Step 4: Execute the cmake command the path to the top"
+echo "of your ROOT source tree"
+echo "#######################################################"
 cmake -Dall="ON" -Dsoversion="ON" ../root_source >> cmake.out.txt 2>&1
-echo "Step 5: After CMake has finished running, proceed to use IDE project files or start the build from the build directory"
+
+echo ""
+echo "#######################################################"
+echo "Step 5: After CMake has finished running, proceed to"
+echo "use IDE project files or start the build from the build"
+echo "from the build directory"
+echo "N.B.: This will take a long time. Now is a good time to"
+echo "go for a coffee."
+echo "#######################################################"
 cmake --build . >> cmake.out.txt 2>&1
+
+echo ""
+echo "#######################################################"
 echo "Step 6: Set the make directory"
+echo "#######################################################"
 cmake -DCMAKE_INSTALL_PREFIX=~/root -P cmake_install.cmake
-echo "Step 7: After ROOT has finished building, install it from the build directory"
+
+echo ""
+echo "#######################################################"
+echo "Step 7: After ROOT has finished building, install it"
+echo "from the build directory"
+echo "#######################################################"
 sudo cmake --build . --target install >> cmake.out.txt 2>&1
+
+echo ""
+echo "#######################################################"
 echo "Step 8: Setup the environment to run"
+echo "#######################################################"
 source bin/thisroot.sh
