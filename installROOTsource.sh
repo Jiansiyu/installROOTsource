@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert (mfeickert@smu.edu)
-# Date: 2016-02-01
+# Date: 2016-03-03
 # Description: Install ROOT 6 from source
 
 # Select the home directory as the top level directory
@@ -75,7 +75,7 @@ echo ""
 echo "#######################################################"
 echo "Step 6: Set the make directory"
 echo "#######################################################"
-cmake -DCMAKE_INSTALL_PREFIX=~/root -P cmake_install.cmake
+cmake -DCMAKE_INSTALL_PREFIX=$TLDIR/root -P cmake_install.cmake
 
 echo ""
 echo "#######################################################"
