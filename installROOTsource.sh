@@ -1,11 +1,20 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2016-10-11
-# Description: Install ROOT 6 from source
+# Date: 2016-10-12
+# Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
-#   but deviates as a result of RootTalk topic 20986
-#   <https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=20986&p=98902#p98926>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
+
+# Resource use warning
+echo ""
+echo "#######################################################"
+echo "N.B.: To try and make this installation as quick as"
+echo "possible a large amount of your computer's resources will"
+echo "be used. It is advised that you don't run large programs"
+echo "and close down any browsers that have many tabs open"
+echo "before continuing with this installation to avoid crashes."
+echo "#######################################################"
+echo ""
 
 # Select the home directory as the top level directory
 TLDIR=~/
@@ -51,7 +60,7 @@ echo "#######################################################"
 echo "Step 2: Create and navigate to the build directory for"
 echo "containing the build"
 echo "#######################################################"
-mkdir root; cd root
+mkdir root_build; cd root_build
 
 echo ""
 echo "#######################################################"
@@ -70,30 +79,35 @@ cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_source >> cmake.out.txt 
 echo ""
 echo "#######################################################"
 echo "Step 5: After CMake has finished running, proceed to"
-echo "use IDE project files or start the build from the build"
-echo "directory"
+echo "start the build from the build directory"
 echo "N.B.: This will take a long time. Now is a good time to"
 echo "go for a coffee."
+echo "(To view progress do: tail -F root_build/cmake.out.txt)"
 echo "#######################################################"
-#cmake --build . >> cmake.out.txt 2>&1
-make -j4 >> cmake.out.txt 2>&1
+#cmake --build . -- -j4 --target install >> cmake.out.txt 2>&1
+cmake --build . -- -j4 >> cmake.out.txt 2>&1
 
 #echo ""
 #echo "#######################################################"
-#echo "Step 6: Set the make directory"
+#echo "Step 6: Setting the installation directory specified"
 #echo "#######################################################"
-#cmake -DCMAKE_INSTALL_PREFIX=$TLDIR/root -P cmake_install.cmake
+#cmake -DCMAKE_INSTALL_PREFIX=$TLDIR/root_build -P cmake_install.cmake >> cmake.out.txt 2>&1
 #
 #echo ""
 #echo "#######################################################"
 #echo "Step 7: After ROOT has finished building, install it"
 #echo "from the build directory"
 #echo "#######################################################"
-#sudo cmake --build . --target install >> cmake.out.txt 2>&1
+#cmake --build . --target install >> cmake.out.txt 2>&1
 
 echo ""
 echo "#######################################################"
 #echo "Step 8: Setup the environment to run"
 echo "Step 6: Setup the environment to run"
+echo "From where you installed root do:"
+echo "source bin/thisroot.sh"
+echo "To test then run: which root"
+echo "To setup root at launch of shell add to your"
+echo "bash_profile:"
+echo "source <output of which root>/bin/thisroot.sh"
 echo "#######################################################"
-source bin/thisroot.sh
