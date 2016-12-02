@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2016-10-14
+# Date: 2016-12-02
 # Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
@@ -135,6 +135,7 @@ echo ""
 echo "#######################################################"
 echo "Step 1: Clone down the HTTP repository from SourceForge"
 echo "#######################################################"
+echo "git clone http://root.cern.ch/git/root.git root_src"
 git clone http://root.cern.ch/git/root.git root_src
 
 echo ""
@@ -142,12 +143,14 @@ echo "#######################################################"
 echo "Step 2: Create and navigate to the build directory for"
 echo "containing the build"
 echo "#######################################################"
+echo "mkdir root_build; cd root_build"
 mkdir root_build; cd root_build
 
 echo ""
 echo "#######################################################"
 echo "Step 3: unset the ROOTSYS ENV variable"
 echo "#######################################################"
+echo "unset ROOTSYS"
 unset ROOTSYS
 
 echo ""
@@ -155,6 +158,7 @@ echo "#######################################################"
 echo "Step 4: Execute the cmake command with the path to the"
 echo "top of your ROOT source tree"
 echo "#######################################################"
+echo "cmake -Dall=\"ON\" -Dsoversion=\"ON\" -Dqtgsi=\"OFF\" ../root_src"
 ##cmake -Dall="ON" -Dsoversion="ON" ../root_src >> cmake.out.txt 2>&1
 cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_src >> cmake.out.txt 2>&1
 
@@ -166,6 +170,7 @@ echo "N.B.: This will take a long time. Now is a good time to"
 echo "go for a coffee."
 echo "(To view progress do: tail -F root_build/cmake.out.txt)"
 echo "#######################################################"
+echo "cmake --build . -- -j4"
 #cmake --build . -- -j4 --target install >> cmake.out.txt 2>&1
 cmake --build . -- -j4 >> cmake.out.txt 2>&1
 
@@ -175,7 +180,8 @@ echo "Step 6: Setting up the installation directory specified"
 echo "(To view progress do:"
 echo "tail -F root_build/cmake_install.out.txt)"
 echo "#######################################################"
-sudo cmake -DCMAKE_INSTALL_PREFIX=$INSTALLDIR -P cmake_install.cmake >> cmake.out.txt 2>&1
+echo "sudo cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} -P cmake_install.cmake"
+sudo cmake -DCMAKE_INSTALL_PREFIX=$INSTALLDIR -P cmake_install.cmake >> cmake_install.out.txt 2>&1
 
 #echo ""
 #echo "#######################################################"
@@ -187,7 +193,7 @@ echo ""
 echo "#######################################################"
 #echo "Step 8: Setup the environment to run"
 echo "Step 7: Setup the environment to run"
-echo "From where you installed root do:"
+echo "From where you installed root (${INSTALLDIR}/) do:"
 echo "source bin/thisroot.sh"
 echo "To test then run: which root"
 echo "To setup root at launch of shell add to your"
