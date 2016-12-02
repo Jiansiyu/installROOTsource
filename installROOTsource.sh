@@ -100,6 +100,10 @@ if [[ $response =~ ^(no|n)$ ]]; then
     exit
 fi
 echo "Beginning installation!"
+echo ""
+
+# start build timer
+SECONDS=0
 
 # Check that pacakges are installed for the correct OS
 ## Ubuntu
@@ -201,6 +205,12 @@ fi
 #echo "Step 7: Install ROOT with CMake"
 #echo "#######################################################"
 #cmake --build . --target install >> cmake_install.out.txt 2>&1
+
+# end build timer
+BUILDTIME=$SECONDS
+echo ""
+echo "ROOT was built and installed in $(($BUILDTIME / 60)) minutes and $(($BUILDTIME % 60)) seconds."
+echo ""
 
 echo ""
 echo "#######################################################"
