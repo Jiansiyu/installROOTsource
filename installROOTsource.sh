@@ -102,7 +102,7 @@ fi
 echo "Beginning installation!"
 echo ""
 
-# start build timer
+# start install timer
 SECONDS=0
 
 # Check that pacakges are installed for the correct OS
@@ -158,6 +158,10 @@ echo "#######################################################"
 echo "unset ROOTSYS"
 unset ROOTSYS
 
+
+# start build timer
+BUILDSTART=$SECONDS
+
 echo ""
 echo "#######################################################"
 echo "Step 4: Execute the cmake command with the path to the"
@@ -206,10 +210,13 @@ fi
 #echo "#######################################################"
 #cmake --build . --target install >> cmake_install.out.txt 2>&1
 
-# end build timer
-BUILDTIME=$SECONDS
+# end install and build timers
+INSTALLTIME=$SECONDS
+BUILDTIME=$((${INSTALLTIME} - ${BUILDSTART}))
+
 echo ""
-echo "ROOT was built and installed in $(($BUILDTIME / 60)) minutes and $(($BUILDTIME % 60)) seconds."
+echo "ROOT was installed in $(($INSTALLTIME / 60)) minutes and $(($INSTALLTIME % 60)) seconds"
+echo "and was built in $(($BUILDTIME / 60)) minutes and $(($BUILDTIME % 60)) seconds."
 echo ""
 
 echo ""
