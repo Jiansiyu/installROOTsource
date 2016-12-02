@@ -133,7 +133,8 @@ fi
 cd "$TLDIR"
 echo ""
 echo "#######################################################"
-echo "Step 1: Clone down the HTTP repository from SourceForge"
+echo "Step 1: Clone the master branch of the Git repository"
+echo "from CERN"
 echo "#######################################################"
 echo "git clone http://root.cern.ch/git/root.git root_src"
 git clone http://root.cern.ch/git/root.git root_src
