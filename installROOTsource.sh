@@ -184,6 +184,18 @@ echo "#######################################################"
 echo "sudo cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} -P cmake_install.cmake"
 sudo cmake -DCMAKE_INSTALL_PREFIX=$INSTALLDIR -P cmake_install.cmake >> cmake_install.out.txt 2>&1
 
+# As of 2016-12-02 the libpng16.so.16 library is not gettting moved
+MISSINGFILE="libpng16.so.16"
+if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
+    LIBPNG16PATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
+    if [ -n "$LIBPNG16PATH" ]; then
+        sudo cp ${LIBPNG16PATH} ${INSTALLDIR}/lib/
+    else
+        echo "${MISSINGFILE} is not found under ${HOME}."
+        echo "Make sure that you have ${MISSINGFILE} installed."
+    fi
+fi
+
 #echo ""
 #echo "#######################################################"
 #echo "Step 7: Install ROOT with CMake"
