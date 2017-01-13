@@ -201,7 +201,6 @@ function stepMakeBuildDir () {
         echo "cd root_build"
     fi
     cd ${TLDIR}/root_build
-    pwd
 }
 
 function stepUnsetROOTSYS () {
