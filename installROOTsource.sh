@@ -140,16 +140,15 @@ function printResourceWarning () {
     echo ""
 }
 
-function setLIBPCRE () {
-    # As of 2016-12-02 the libpcre.so.1 library is not gettting moved
-    MISSINGFILE="libpcre.so.1"
+function findMissingLIB () {
+    MISSINGFILE="$1"
     if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
-        LIBPNG16PATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
-        if [ -n "$LIBPNG16PATH" ]; then
-            if [[ ! -f ${INSTALLDIR}/lib ]]; then
+        LIBMISSINGPATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
+        if [ -n "$LIBMISSINGPATH" ]; then
+            if [[ ! -d ${INSTALLDIR}/lib ]]; then
                 sudo mkdir ${INSTALLDIR}/lib
             fi
-            sudo cp ${LIBPNG16PATH} ${INSTALLDIR}/lib/
+            sudo cp ${LIBMISSINGPATH} ${INSTALLDIR}/lib/
         else
             echo "${MISSINGFILE} is not found under ${HOME}."
             echo "Make sure that you have ${MISSINGFILE} installed."
@@ -157,21 +156,12 @@ function setLIBPCRE () {
     fi
 }
 
-function setLIBPNG () {
-    # As of 2016-12-02 the libpng16.so.16 library is not gettting moved
-    MISSINGFILE="libpng16.so.16"
-    if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
-        LIBPNG16PATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
-        if [ -n "$LIBPNG16PATH" ]; then
-            if [[ ! -f ${INSTALLDIR}/lib ]]; then
-                sudo mkdir ${INSTALLDIR}/lib
-            fi
-            sudo cp ${LIBPNG16PATH} ${INSTALLDIR}/lib/
-        else
-            echo "${MISSINGFILE} is not found under ${HOME}."
-            echo "Make sure that you have ${MISSINGFILE} installed."
-        fi
-    fi
+function setMissingLIB () {
+    # As of 2016-12-02 the libpng16.so.16, libpcre.so.1, libiconv.so.2 libraries
+    # are not gettting moved properly
+    findMissingLIB "libpng16.so.16"
+    findMissingLIB "libpcre.so.1"
+    findMissingLIB "libiconv.so.2"
 }
 
 function stepCloneGit () {
@@ -204,7 +194,7 @@ function stepMakeBuildDir () {
     echo "Step $1: Create and navigate to the build directory for"
     echo "containing the build"
     echo "#######################################################"
-    if [[ -f ${TLDIR}/root_build ]]; then
+    if [[ ! -d ${TLDIR}/root_build ]]; then
         echo "mkdir root_build; cd root_build"
         mkdir ${TLDIR}/root_build
     else
@@ -249,6 +239,8 @@ function stepBuild () {
     echo "(To view progress do: tail -F root_build/cmake.out.txt)"
     echo "#######################################################"
     echo "cmake --build . -- -j4"
+    echo "" >> cmake.out.txt 2>&1
+    date -u >> cmake.out.txt 2>&1
     #cmake --build . -- -j4 --target install >> cmake.out.txt 2>&1
     cmake --build . -- -j4 >> cmake.out.txt 2>&1
 }
@@ -262,6 +254,8 @@ function stepMoveInstall () {
     echo "tail -F root_build/cmake_install.out.txt)"
     echo "#######################################################"
     echo "sudo cmake -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} -P cmake_install.cmake"
+    echo "" >> cmake_install.out.txt 2>&1
+    date -u >> cmake_install.out.txt 2>&1
     sudo cmake -DCMAKE_INSTALL_PREFIX=$INSTALLDIR -P cmake_install.cmake >> cmake_install.out.txt 2>&1
 }
 
@@ -299,8 +293,9 @@ function install () {
     BUILDSTART=$SECONDS
 
     stepConfigureCMake 4
-    setLIBPNG
-    setLIBPCRE
+
+    setMissingLIB
+
     stepBuild 5
     stepMoveInstall 6
 
@@ -333,8 +328,8 @@ function rebuild () {
 
     stepMakeBuildDir 2
 
-    setLIBPNG
-    setLIBPCRE
+    setMissingLIB
+
     stepBuild 3
     stepMoveInstall 4
 
