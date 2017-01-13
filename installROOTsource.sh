@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2016-12-02
+# Date: 2017-01-13
 # Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
@@ -79,6 +79,7 @@ function setInstallLocation () {
 
     echo ""
     # Default the install directory to be the build directory
+    # TODO: For rebuild detect that 'which root' doesn't return null and start there
     INSTALLDIR="$TLDIR"
     echo "ROOT will be installed in your build directory: $INSTALLDIR"
     read -r -p "Do you want ROOT installed in a DIFFERENT directory? [Y/n] " response
@@ -139,12 +140,32 @@ function printResourceWarning () {
     echo ""
 }
 
+function setLIBPCRE () {
+    # As of 2016-12-02 the libpcre.so.1 library is not gettting moved
+    MISSINGFILE="libpcre.so.1"
+    if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
+        LIBPNG16PATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
+        if [ -n "$LIBPNG16PATH" ]; then
+            if [[ ! -f ${INSTALLDIR}/lib ]]; then
+                sudo mkdir ${INSTALLDIR}/lib
+            fi
+            sudo cp ${LIBPNG16PATH} ${INSTALLDIR}/lib/
+        else
+            echo "${MISSINGFILE} is not found under ${HOME}."
+            echo "Make sure that you have ${MISSINGFILE} installed."
+        fi
+    fi
+}
+
 function setLIBPNG () {
     # As of 2016-12-02 the libpng16.so.16 library is not gettting moved
     MISSINGFILE="libpng16.so.16"
     if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
         LIBPNG16PATH="$(find $HOME -iname ${MISSINGFILE} -print -quit 2>/dev/null)"
         if [ -n "$LIBPNG16PATH" ]; then
+            if [[ ! -f ${INSTALLDIR}/lib ]]; then
+                sudo mkdir ${INSTALLDIR}/lib
+            fi
             sudo cp ${LIBPNG16PATH} ${INSTALLDIR}/lib/
         else
             echo "${MISSINGFILE} is not found under ${HOME}."
@@ -164,6 +185,18 @@ function stepCloneGit () {
     git clone http://root.cern.ch/git/root.git root_src
 }
 
+function stepPullGitMaster () {
+    # Step 1
+    echo ""
+    echo "#######################################################"
+    echo "Step $1: Pull from the master branch of the Git repository"
+    echo "from CERN"
+    echo "#######################################################"
+    echo "cd root_src; git pull"
+    cd ${TLDIR}/root_src
+    git pull
+}
+
 function stepMakeBuildDir () {
     # Step 2
     echo ""
@@ -171,8 +204,14 @@ function stepMakeBuildDir () {
     echo "Step $1: Create and navigate to the build directory for"
     echo "containing the build"
     echo "#######################################################"
-    echo "mkdir root_build; cd root_build"
-    mkdir root_build; cd root_build
+    if [[ -f ${TLDIR}/root_build ]]; then
+        echo "mkdir root_build; cd root_build"
+        mkdir ${TLDIR}/root_build
+    else
+        echo "cd root_build"
+    fi
+    cd ${TLDIR}/root_build
+    pwd
 }
 
 function stepUnsetROOTSYS () {
@@ -194,7 +233,9 @@ function stepConfigureCMake () {
     echo "#######################################################"
     echo "cmake -Dall=\"ON\" -Dsoversion=\"ON\" -Dqtgsi=\"OFF\" ../root_src"
     ##cmake -Dall="ON" -Dsoversion="ON" ../root_src >> cmake.out.txt 2>&1
-    cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_src >> cmake.out.txt 2>&1
+    #cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_src >> cmake.out.txt 2>&1
+    #FIXME: 2017-01-13 tmp edit just to fucking build
+    cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" -Dr="OFF" ../root_src >> cmake.out.txt 2>&1
 }
 
 function stepBuild () {
@@ -258,10 +299,12 @@ function install () {
     BUILDSTART=$SECONDS
 
     stepConfigureCMake 4
+    setLIBPNG
+    setLIBPCRE
     stepBuild 5
     stepMoveInstall 6
 
-    setLIBPNG
+    #setLIBPNG
 
     # end install and build timers
     INSTALLTIME=$SECONDS
@@ -278,12 +321,22 @@ function install () {
 function rebuild () {
     checkOS
     printResourceWarning
+    setInstallLocation
 
     # start install timer
     SECONDS=0
 
+    stepPullGitMaster 1
+
     # start build timer
     BUILDSTART=$SECONDS
+
+    stepMakeBuildDir 2
+
+    setLIBPNG
+    setLIBPCRE
+    stepBuild 3
+    stepMoveInstall 4
 
     # end install and build timers
     INSTALLTIME=$SECONDS
@@ -294,7 +347,7 @@ function rebuild () {
     echo "and was built in $(($BUILDTIME / 60)) minutes and $(($BUILDTIME % 60)) seconds."
     echo ""
 
-    stepPrintSourceInstructions 7
+    stepPrintSourceInstructions 5
 }
 
 ###
@@ -303,11 +356,10 @@ function rebuild () {
 
 function main () {
     if [[ "$1" == "rebuild" ]]; then
-        echo "$1"
-
+        DIST=$(lsb_release -si)
+        echo "ROOT will be rebuilt on ${DIST}."
+        sleep 1
         rebuild
-
-        echo "$DIST"
     elif [[ "$1" == "install" ]]; then
         install
     else
