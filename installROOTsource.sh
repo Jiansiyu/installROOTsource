@@ -273,6 +273,15 @@ function stepPrintSourceInstructions () {
     echo "#######################################################"
 }
 
+function printRebuildInstructions () {
+    # Last step
+    echo ""
+    echo "#######################################################"
+    echo "To rebuild ROOT from an updated master branch simply do:"
+    echo "bash installROOTsource.sh rebuild"
+    echo "#######################################################"
+}
+
 function install () {
     checkOS
     printResourceWarning
@@ -311,6 +320,7 @@ function install () {
     echo ""
 
     stepPrintSourceInstructions 7
+    printRebuildInstructions
 }
 
 function rebuild () {
@@ -343,6 +353,7 @@ function rebuild () {
     echo ""
 
     stepPrintSourceInstructions 5
+    printRebuildInstructions
 }
 
 ###
