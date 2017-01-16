@@ -222,9 +222,7 @@ function stepConfigureCMake () {
     echo "#######################################################"
     echo "cmake -Dall=\"ON\" -Dsoversion=\"ON\" -Dqtgsi=\"OFF\" ../root_src"
     ##cmake -Dall="ON" -Dsoversion="ON" ../root_src >> cmake.out.txt 2>&1
-    #cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_src >> cmake.out.txt 2>&1
-    #FIXME: 2017-01-13 tmp edit just to fucking build
-    cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" -Dr="OFF" ../root_src >> cmake.out.txt 2>&1
+    cmake -Dall="ON" -Dsoversion="ON" -Dqtgsi="OFF" ../root_src >> cmake.out.txt 2>&1
 }
 
 function stepBuild () {
