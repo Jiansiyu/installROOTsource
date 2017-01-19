@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2017-01-13
+# Date: 2017-01-17
 # Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
@@ -184,7 +184,11 @@ function stepPullGitMaster () {
     echo "#######################################################"
     echo "cd root_src; git pull"
     cd ${TLDIR}/root_src
-    git pull
+    if [[ "$(git pull)" == "Already up-to-date." ]]; then
+        echo "Already up-to-date."
+        echo "As master is up-to-date there is no need to currently rebuild."
+        exit
+    fi
 }
 
 function stepMakeBuildDir () {
@@ -279,6 +283,15 @@ function printRebuildInstructions () {
     echo "#######################################################"
 }
 
+function printUninstallInstructions () {
+    # Last step
+    echo ""
+    echo "#######################################################"
+    echo "To uninstall ROOT from this machine simply do:"
+    echo "bash installROOTsource.sh uninstall"
+    echo "#######################################################"
+}
+
 function install () {
     checkOS
     printResourceWarning
@@ -318,6 +331,7 @@ function install () {
 
     stepPrintSourceInstructions 7
     printRebuildInstructions
+    printUninstallInstructions
 }
 
 function rebuild () {
@@ -351,6 +365,97 @@ function rebuild () {
 
     stepPrintSourceInstructions 5
     printRebuildInstructions
+    printUninstallInstructions
+}
+
+function setUninstallLocation () {
+    # Select the home directory as the top level directory
+    BUILDDIR=~/
+    echo "It is assumed that ROOT was built in your home directory: $BUILDDIR"
+    read -r -p "Was ROOT built in a DIFFERENT directory? [Y/n] " response
+    response=${response,,}    # tolower
+    if [[ $response =~ ^(yes|y)$ ]]; then
+    # Check if path is empty string
+        read -r -e -p "Enter the full file path of the directory:" BUILDDIR
+        if [[ -z "$BUILDDIR" ]]; then
+            echo "That path you have entered is an empty string."
+            exit
+        fi
+    # Check if path does not exist
+        if [[ ! -e "$BUILDDIR/root_src" ]]; then
+            echo "The directory root_src does does not exist in this path."
+            exit
+        fi
+        if [[ ! -e "$BUILDDIR/root_build" ]]; then
+            echo "The directory root_build does does not exist in this path."
+            exit
+        fi
+    fi
+
+    echo ""
+    # Default the install directory to be the build directory
+    # TODO: For rebuild detect that 'which root' doesn't return null and start there
+    INSTALLDIR="/usr/local/root/"
+    echo "It is assumed that ROOT was installed in : $INSTALLDIR"
+    read -r -p "Was ROOT installed in a DIFFERENT directory? [Y/n] " response
+    response=${response,,}    # tolower
+    if [[ $response =~ ^(yes|y)$ ]]; then
+    # Check if path is empty string
+        read -r -e -p "Enter the full file path of the directory:" INSTALLDIR
+        if [[ -z "$INSTALLDIR" ]]; then
+            echo "That path you have entered is an empty string."
+            exit
+        fi
+    # Check if path does not exist
+        if [[ ! -e "$INSTALLDIR/bin/root" ]]; then
+            echo "The root install directory does not exist in this path."
+            exit
+        fi
+    fi
+
+    echo ""
+    echo "#######################################################"
+    echo "ROOT will be uninstalled from $BUILDDIR and $INSTALLDIR"
+    echo "#######################################################"
+    echo ""
+
+    read -r -p "Is this all okay? [Y/n] " response
+    response=${response,,}    # tolower
+    if [[ $response =~ ^(no|n)$ ]]; then
+        exit
+    fi
+    echo "Beginning uninstall!"
+    echo ""
+}
+
+function findDir () {
+    LOCATEDIR="$2"
+    #DIRPATH="$(find $HOME -type d -iname ${LOCATEDIR} -print -quit 2>/dev/null)"
+    DIRPATH="$(find $1 -type d -iname ${LOCATEDIR} -print -quit 2>/dev/null)"
+    echo "$DIRPATH"
+}
+
+function uninstallROOT() {
+    UNINSTALLBUILD="$(findDir $BUILDDIR root_build)"
+    UNINSTALLSRC="$(findDir $BUILDDIR root_src)"
+    UNINSTALLDIR="$(findDir $INSTALLDIR root)"
+
+    echo ""
+    echo "Removing the directories $UNINSTALLBUILD and $UNINSTALLSRC."
+    sudo rm -rf "$UNINSTALLBUILD"
+    sudo rm -rf "$UNINSTALLSRC"
+    echo ""
+    #TODO: Fix this rm problem
+    echo "Removing the installation of ROOT from $INSTALLDIR."
+    sudo rm -rf "$UNINSTALLDIR"
+
+    echo ""
+    echo "#######################################################"
+    echo "ROOT has been successfully uninstalled."
+    echo "To install ROOT again on this machine do:"
+    echo "bash installROOTsource.sh"
+    echo "#######################################################"
+    echo ""
 }
 
 ###
@@ -363,6 +468,9 @@ function main () {
         echo "ROOT will be rebuilt on ${DIST}."
         sleep 1
         rebuild
+    elif [[ "$1" == "uninstall" ]]; then
+        setUninstallLocation
+        uninstallROOT
     elif [[ "$1" == "install" ]]; then
         install
     else
