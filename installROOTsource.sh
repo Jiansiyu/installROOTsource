@@ -157,11 +157,12 @@ function findMissingLIB () {
 }
 
 function setMissingLIB () {
-    # As of 2016-12-02 the libpng16.so.16, libpcre.so.1, libiconv.so.2 libraries
-    # are not gettting moved properly
+    # As of 2016-12-02 the libpng16.so.16, libpcre.so.1, libiconv.so.2, and libjpeg.so.9
+    # libraries are not gettting moved properly
     findMissingLIB "libpng16.so.16"
     findMissingLIB "libpcre.so.1"
     findMissingLIB "libiconv.so.2"
+    findMissingLIB "libjpeg.so.9"
 }
 
 function stepCloneGit () {
