@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2017-01-17
+# Date: 2017-01-25
 # Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
@@ -140,6 +140,32 @@ function printResourceWarning () {
     echo ""
 }
 
+function setNumProcessors () {
+    if [[ -f "$(which nproc)" ]]; then
+        NPROC="$(nproc)"
+    else
+        NPROC="$(grep -c '^processor' /proc/cpuinfo)"
+    fi
+
+    echo "Your computer has ${NPROC} processors available for use during the build."
+    read -r -p "Would you like to use a DIFFERENT number of processors? [Y/n] " response
+    response=${response,,}    # tolower
+    if [[ $response =~ ^(yes|y)$ ]]; then
+    # Check if path is empty string
+        read -r -e -p "Enter the number of processors you wish to use: " NPROC
+        if [[ "${NPROC}" == 0 ]]; then
+            echo "At least 1 processor is required."
+            exit
+        fi
+    # Check if path does not exist
+        if [[ "${NPROC}" -gt "$(grep -c '^processor' /proc/cpuinfo)" ]]; then
+            echo "The number of processors requested is more then is available."
+            exit
+        fi
+    fi
+    echo ""
+}
+
 function findMissingLIB () {
     MISSINGFILE="$1"
     if [ ! -f ${INSTALLDIR}/lib/${MISSINGFILE} ]; then
@@ -240,11 +266,11 @@ function stepBuild () {
     echo "go for a coffee."
     echo "(To view progress do: tail -F root_build/cmake.out.txt)"
     echo "#######################################################"
-    echo "cmake --build . -- -j4"
+    echo "cmake --build . -- -j${NPROC}"
     echo "" >> cmake.out.txt 2>&1
     date -u >> cmake.out.txt 2>&1
     #cmake --build . -- -j4 --target install >> cmake.out.txt 2>&1
-    cmake --build . -- -j4 >> cmake.out.txt 2>&1
+    cmake --build . -- -j${NPROC} >> cmake.out.txt 2>&1
 }
 
 function stepMoveInstall () {
@@ -296,6 +322,7 @@ function printUninstallInstructions () {
 function install () {
     checkOS
     printResourceWarning
+    setNumProcessors
     setInstallLocation
 
     # start install timer
@@ -338,6 +365,7 @@ function install () {
 function rebuild () {
     checkOS
     printResourceWarning
+    setNumProcessors
     setInstallLocation
 
     # start install timer
