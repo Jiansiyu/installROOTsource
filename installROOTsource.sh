@@ -6,6 +6,10 @@
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
 #   Testing on SL6 6.8, gcc 4.4.7, with Anaconda
 
+function getUserShell () {
+    USERSHELL="$(echo $SHELL | sed 's:.*/::')"
+}
+
 function checkOS () {
     # check that OS is supported
     if [[ -f /etc/lsb-release ]]; then
@@ -296,7 +300,7 @@ function stepPrintSourceInstructions () {
     echo "source bin/thisroot.sh"
     echo "To test then run: which root"
     echo "To setup root at launch of shell add to your"
-    echo "bash_profile:"
+    echo "${USERSHELL}_profile:"
     echo "source <output of which root>/bin/thisroot.sh"
     echo "#######################################################"
 }
@@ -306,7 +310,7 @@ function printRebuildInstructions () {
     echo ""
     echo "#######################################################"
     echo "To rebuild ROOT from an updated master branch simply do:"
-    echo "bash installROOTsource.sh rebuild"
+    echo "${USERSHELL} installROOTsource.sh rebuild"
     echo "#######################################################"
 }
 
@@ -315,7 +319,7 @@ function printUninstallInstructions () {
     echo ""
     echo "#######################################################"
     echo "To uninstall ROOT from this machine simply do:"
-    echo "bash installROOTsource.sh uninstall"
+    echo "${USERSHELL} installROOTsource.sh uninstall"
     echo "#######################################################"
 }
 
@@ -482,7 +486,7 @@ function uninstallROOT() {
     echo "#######################################################"
     echo "ROOT has been successfully uninstalled."
     echo "To install ROOT again on this machine do:"
-    echo "bash installROOTsource.sh"
+    echo "${USERSHELL} installROOTsource.sh"
     echo "#######################################################"
     echo ""
 }
@@ -492,6 +496,7 @@ function uninstallROOT() {
 ###
 
 function main () {
+    getUserShell
     if [[ "$1" == "rebuild" ]]; then
         DIST=$(lsb_release -si)
         echo "ROOT will be rebuilt on ${DIST}."
