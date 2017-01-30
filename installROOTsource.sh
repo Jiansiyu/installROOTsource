@@ -62,72 +62,96 @@ function checkPackages () {
 }
 
 function setInstallLocation () {
+    # c.f.: http://stackoverflow.com/questions/226703/how-do-i-prompt-for-yes-no-cancel-input-in-a-linux-shell-script
     # Select the home directory as the top level directory
     TLDIR=~/
+    while true; do
     echo "ROOT will be built in your home directory: $TLDIR"
-    read -r -p "Do you want ROOT built in a DIFFERENT directory? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(yes|y)$ ]]; then
-    # Check if path is empty string
-        read -r -e -p "Enter the full file path of the directory:" TLDIR
-        if [[ -z "$TLDIR" ]]; then
-            echo "That path you have entered is an empty string."
-            exit
-        fi
-    # Check if path does not exist
-        if [[ ! -e "$TLDIR" ]]; then
-            echo "The path does not exist."
-            exit
-        fi
-    fi
+    read -p "Do you want ROOT built in a DIFFERENT directory? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+                # Check if path is empty string
+                read -r -e -p "Enter the full file path of the directory:" TLDIR
+                if [[ -z "$TLDIR" ]]; then
+                    echo "That path you have entered is an empty string."
+                    exit
+                fi
+                # Check if path does not exist
+                if [[ ! -e "$TLDIR" ]]; then
+                    echo "The path does not exist."
+                    exit
+                fi; break;;
+            [Nn]* ) break;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 
     echo ""
     # Default the install directory to be the build directory
     # TODO: For rebuild detect that 'which root' doesn't return null and start there
     INSTALLDIR="$TLDIR"
+    while true; do
     echo "ROOT will be installed in your build directory: $INSTALLDIR"
-    read -r -p "Do you want ROOT installed in a DIFFERENT directory? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(yes|y)$ ]]; then
-    # Check if path is empty string
-        read -r -e -p "Enter the full file path of the directory:" INSTALLDIR
-        if [[ -z "$INSTALLDIR" ]]; then
-            echo "That path you have entered is an empty string."
-            exit
-        fi
-    # Check if path does not exist
-        if [[ ! -e "$INSTALLDIR" ]]; then
-            echo "The path does not exist."
-            read -r -p "Would you like to make it? [Y/n] " response
-            response=${response,,}    # tolower
-            if [[ $response =~ ^(yes|y)$ ]]; then
-                sudo mkdir "$INSTALLDIR"
-            fi
-            if [[ $response =~ ^(no|n)$ ]]; then
+    read -p "Do you want ROOT installed in a DIFFERENT directory? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+            # Check if path is empty string
+            read -r -e -p "Enter the full file path of the directory:" INSTALLDIR
+            if [[ -z "$INSTALLDIR" ]]; then
+                echo "That path you have entered is an empty string."
                 exit
             fi
-        fi
-        INSTALLDIR="$INSTALLDIR"/root
-        if [[ ! -e "$INSTALLDIR" ]]; then
-            echo "Need sudo to make $INSTALLDIR"
-            sudo mkdir "$INSTALLDIR"
-        fi
-    fi
+            # Check if path does not exist
+            if [[ ! -e "$INSTALLDIR" ]]; then
+                while true; do
+                echo "The path does not exist."
+                read -p "Would you like to make it? [Y/n] " response
+                    case $response in
+                        [Yy]* )
+                            sudo mkdir "$INSTALLDIR"; break;;
+                        [Nn]* ) exit;;
+                        * )
+                            echo ""
+                            echo "Please answer Yes or No."
+                            echo "";;
+                    esac
+                done
+            fi
+            INSTALLDIR="$INSTALLDIR"/root
+            if [[ ! -e "$INSTALLDIR" ]]; then
+                echo "Need sudo to make $INSTALLDIR"
+                sudo mkdir "$INSTALLDIR"
+            fi; break;;
+            [Nn]* ) break;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 
+    while true; do
     echo ""
     echo "#######################################################"
     echo "ROOT will be built in: $TLDIR"
     echo "ROOT will be installed in: $INSTALLDIR"
     echo "#######################################################"
     echo ""
-
-    read -r -p "Is this all okay? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(no|n)$ ]]; then
-        exit
-    fi
-    echo "Beginning installation!"
-    echo ""
+    read -p "Is this all okay? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+                echo "Beginning installation!"
+                echo ""; break;;
+            [Nn]* ) exit;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 }
 
 function printResourceWarning () {
@@ -151,24 +175,32 @@ function setNumProcessors () {
         NPROC="$(grep -c '^processor' /proc/cpuinfo)"
     fi
 
+    while true; do
     echo "Your computer has ${NPROC} processors available for use during the build."
-    read -r -p "Would you like to use a DIFFERENT number of processors? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(yes|y)$ ]]; then
-    # Check if path is empty string
-        read -r -e -p "Enter the number of processors you wish to use: " NPROC
-        if [[ "${NPROC}" == 0 ]]; then
-            echo "At least 1 processor is required."
-            exit
-        fi
-    # Check if path does not exist
-        if [[ "${NPROC}" -gt "$(grep -c '^processor' /proc/cpuinfo)" ]]; then
-            echo "The number of processors requested is more then is available."
-            exit
-        fi
-    fi
-    echo ""
+    read -p "Would you like to use a DIFFERENT number of processors? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+                read -r -e -p "Enter the number of processors you wish to use: " NPROC
+                if [[ "${NPROC}" == 0 ]]; then
+                    echo "At least 1 processor is required."
+                    exit
+                fi
+            # Check if number of processors available
+                if [[ "${NPROC}" -gt "$(grep -c '^processor' /proc/cpuinfo)" ]]; then
+                    echo "The number of processors requested is more then is available."
+                    exit
+                fi; break;;
+            [Nn]* )
+                echo ""
+                break;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 }
+
 
 function findMissingLIB () {
     MISSINGFILE="$1"
@@ -404,61 +436,82 @@ function rebuild () {
 function setUninstallLocation () {
     # Select the home directory as the top level directory
     BUILDDIR=~/
+
+    while true; do
     echo "It is assumed that ROOT was built in your home directory: $BUILDDIR"
-    read -r -p "Was ROOT built in a DIFFERENT directory? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(yes|y)$ ]]; then
-    # Check if path is empty string
-        read -r -e -p "Enter the full file path of the directory:" BUILDDIR
-        if [[ -z "$BUILDDIR" ]]; then
-            echo "That path you have entered is an empty string."
-            exit
-        fi
-    # Check if path does not exist
-        if [[ ! -e "$BUILDDIR/root_src" ]]; then
-            echo "The directory root_src does does not exist in this path."
-            exit
-        fi
-        if [[ ! -e "$BUILDDIR/root_build" ]]; then
-            echo "The directory root_build does does not exist in this path."
-            exit
-        fi
-    fi
+    read -p "Was ROOT built in a DIFFERENT directory? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+                # Check if path is empty string
+                read -r -e -p "Enter the full file path of the directory:" BUILDDIR
+                if [[ -z "$BUILDDIR" ]]; then
+                    echo "That path you have entered is an empty string."
+                    exit
+                fi
+                # Check if path does not exist
+                if [[ ! -e "$BUILDDIR/root_src" ]]; then
+                    echo "The directory root_src does does not exist in this path."
+                    exit
+                fi
+                if [[ ! -e "$BUILDDIR/root_build" ]]; then
+                    echo "The directory root_build does does not exist in this path."
+                    exit
+                fi; break;;
+            [Nn]* ) break;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 
     echo ""
     # Default the install directory to be the build directory
     # TODO: For rebuild detect that 'which root' doesn't return null and start there
     INSTALLDIR="/usr/local/root/"
-    echo "It is assumed that ROOT was installed in : $INSTALLDIR"
-    read -r -p "Was ROOT installed in a DIFFERENT directory? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(yes|y)$ ]]; then
-    # Check if path is empty string
-        read -r -e -p "Enter the full file path of the directory:" INSTALLDIR
-        if [[ -z "$INSTALLDIR" ]]; then
-            echo "That path you have entered is an empty string."
-            exit
-        fi
-    # Check if path does not exist
-        if [[ ! -e "$INSTALLDIR/bin/root" ]]; then
-            echo "The root install directory does not exist in this path."
-            exit
-        fi
-    fi
 
+    while true; do
+    echo "It is assumed that ROOT was installed in : $INSTALLDIR"
+    read -p "Was ROOT installed in a DIFFERENT directory? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+            # Check if path is empty string
+                read -r -e -p "Enter the full file path of the directory:" INSTALLDIR
+                if [[ -z "$INSTALLDIR" ]]; then
+                    echo "That path you have entered is an empty string."
+                    exit
+                fi
+            # Check if path does not exist
+                if [[ ! -e "$INSTALLDIR/bin/root" ]]; then
+                    echo "The root install directory does not exist in this path."
+                    exit
+                fi; break;;
+            [Nn]* ) break;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
+
+    while true; do
     echo ""
     echo "#######################################################"
     echo "ROOT will be uninstalled from $BUILDDIR and $INSTALLDIR"
     echo "#######################################################"
     echo ""
-
-    read -r -p "Is this all okay? [Y/n] " response
-    response=${response,,}    # tolower
-    if [[ $response =~ ^(no|n)$ ]]; then
-        exit
-    fi
-    echo "Beginning uninstall!"
-    echo ""
+    read -p "Is this all okay? [Y/n] " yn
+        case $yn in
+            [Yy]* )
+                echo "Beginning uninstall!"
+                echo ""; break;;
+            [Nn]* ) exit;;
+            * )
+                echo ""
+                echo "Please answer Yes or No."
+                echo "";;
+        esac
+    done
 }
 
 function findDir () {
