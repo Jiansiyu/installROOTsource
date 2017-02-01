@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author: Matthew Feickert <matthew.feickert@cern.ch>
-# Date: 2017-01-25
+# Date: 2017-02-01
 # Description: Install ROOT 6 from source using CMake
 #   Follows the ROOT build instructions <https://root.cern.ch/building-root>
 #   Tested on Ubuntu 16.04 LTS, gcc 5.4, with Anaconda
@@ -553,7 +553,6 @@ function main () {
     if [[ "$1" == "rebuild" ]]; then
         DIST=$(lsb_release -si)
         echo "ROOT will be rebuilt on ${DIST}."
-        sleep 1
         rebuild
     elif [[ "$1" == "uninstall" ]]; then
         setUninstallLocation
@@ -561,7 +560,30 @@ function main () {
     elif [[ "$1" == "install" ]]; then
         install
     else
-        install
+        while true; do
+        echo ""
+        echo "#######################################################"
+        echo "Would you like to:"
+        echo "* [Install] ROOT"
+        echo "* Update and [rebuild] ROOT"
+        echo "* [Uninstall] ROOT"
+        echo "#######################################################"
+        echo ""
+        read -p "Please enter 'install', 'rebuild', or 'uninstall': " response
+            case $response in
+                [Ii]* )
+                    install; break;;
+                [Rr]* )
+                    DIST=$(lsb_release -si)
+                    echo "ROOT will be rebuilt on ${DIST}."
+                    rebuild; break;;
+                [Uu]* )
+                    setUninstallLocation
+                    uninstallROOT; break;;
+                * )
+                    echo "";;
+            esac
+        done
     fi
 }
 
