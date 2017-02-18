@@ -233,6 +233,7 @@ function stepCloneGit () {
     echo "#######################################################"
     echo "Step $1: Clone the master branch of the Git repository"
     echo "from CERN"
+    echo "Visit https://root.cern.ch/gitweb/?p=root.git for more"
     echo "#######################################################"
     echo "git clone http://root.cern.ch/git/root.git root_src"
     git clone http://root.cern.ch/git/root.git root_src
